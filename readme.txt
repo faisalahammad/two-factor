@@ -2,11 +2,11 @@
 Contributors: georgestephanis, valendesigns, stevenkword, extendwings, sgrant, aaroncampbell, johnbillion, stevegrunwell, netweb, kasparsd, alihusnainarshad, passoniate
 Tags:         2fa, mfa, totp, authentication, security
 Tested up to: 6.9
-Stable tag:   0.14.2
+Stable tag:   0.15.0
 License:      GPL-2.0-or-later
 License URI:  https://spdx.org/licenses/GPL-2.0-or-later.html
 
-Enable Two-Factor Authentication (2FA) using time-based one-time passwords (TOTP), Universal 2nd Factor (U2F), email, and backup verification codes.
+Enable Two-Factor Authentication (2FA) using time-based one-time passwords (TOTP), email, and backup verification codes.
 
 == Description ==
 
@@ -14,7 +14,7 @@ The Two-Factor plugin adds an extra layer of security to your WordPress login by
 
 ## Setup Instructions
 
-**Important**: Each user must individually configure their two-factor authentication settings.  There are no site-wide settings for this plugin.
+**Important**: Each user must individually configure their two-factor authentication settings.
 
 ### For Individual Users
 
@@ -23,7 +23,6 @@ The Two-Factor plugin adds an extra layer of security to your WordPress login by
 3. **Choose your methods**: Enable one or more authentication providers (noting a site admin may have hidden one or more so what is available could vary):
    - **Authenticator App (TOTP)** - Use apps like Google Authenticator, Authy, or 1Password
    - **Email Codes** - Receive one-time codes via email
-   - **FIDO U2F Security Keys** - Use physical security keys (requires HTTPS)
    - **Backup Codes** - Generate one-time backup codes for emergencies
    - **Dummy Method** - For testing purposes only (requires WP_DEBUG)
 4. **Configure each method**: Follow the setup instructions for each enabled provider
@@ -32,7 +31,7 @@ The Two-Factor plugin adds an extra layer of security to your WordPress login by
 
 ### For Site Administrators
 
-- **No global settings**: This plugin operates on a per-user basis only. For more, see [GH#249](https://github.com/WordPress/two-factor/issues/249).
+- **Plugin settings**: The plugin provides a settings page under "Settings → Two-Factor" to configure which providers should be disabled site-wide.
 - **User management**: Administrators can configure 2FA for other users by editing their profiles
 - **Security recommendations**: Encourage users to enable backup methods to prevent account lockouts
 
@@ -57,11 +56,7 @@ The Two-Factor plugin adds an extra layer of security to your WordPress login by
 - **Best for**: Users who prefer email-based authentication
 
 ### FIDO U2F Security Keys
-- **Security**: High - Hardware-based authentication
-- **Setup**: Register physical security keys (USB, NFC, or Bluetooth)
-- **Requirements**: HTTPS connection required, compatible browser needed
-- **Browser Support**: Chrome, Firefox, Edge (varies by key type)
-- **Best for**: Users with security keys who want maximum security
+- Deprecated and removed due to loss of browser support.
 
 ### Dummy Method
 - **Security**: None - Always succeeds
@@ -72,11 +67,9 @@ The Two-Factor plugin adds an extra layer of security to your WordPress login by
 ## Important Notes
 
 ### HTTPS Requirement
-- FIDO U2F Security Keys require an HTTPS connection to function
-- Other methods work on both HTTP and HTTPS sites
+- All methods work on both HTTP and HTTPS sites
 
 ### Browser Compatibility
-- FIDO U2F requires a compatible browser and may not work on all devices
 - TOTP and email methods work on all devices and browsers
 
 ### Account Recovery
@@ -108,6 +101,7 @@ Here is a list of action and filter hooks provided by the plugin:
 - `two_factor_before_authentication_prompt` action which receives the provider object and fires prior to the prompt shown on the authentication input form.
 - `two_factor_after_authentication_prompt` action which receives the provider object and fires after the prompt shown on the authentication input form.
 - `two_factor_after_authentication_input`action which receives the provider object and fires after the input shown on the authentication input form (if form contains no input, action fires immediately after `two_factor_after_authentication_prompt`).
+- `two_factor_login_backup_links` filters the backup links displayed on the two-factor login form.
 
 == Frequently Asked Questions ==
 
@@ -125,19 +119,15 @@ The plugin contributors and WordPress community take security bugs seriously. We
 
 To report a security issue, please visit the [WordPress HackerOne](https://hackerone.com/wordpress) program.
 
-= Why doesn't this plugin have site-wide settings? =
-
-This plugin is designed to work on a per-user basis, allowing each user to choose their preferred authentication methods. This approach provides maximum flexibility and security. Site administrators can still configure 2FA for other users by editing their profiles. For more information, see [issue #437](https://github.com/WordPress/two-factor/issues/437).
-
 = What if I lose access to all my authentication methods? =
 
 If you have backup codes enabled, you can use one of those to regain access. If you don't have backup codes or have used them all, you'll need to contact your site administrator to reset your account. This is why it's important to always enable backup codes and keep them in a secure location.
 
 = Can I use this plugin with WebAuthn? =
 
-The plugin currently supports FIDO U2F, which is the predecessor to WebAuthn. For full WebAuthn support, you may want to look into additional plugins that extend this functionality. The current U2F implementation requires HTTPS and has browser compatibility limitations.
+The plugin previously supported FIDO U2F, which was a predecessor to WebAuthn. There is an open issue to add WebAuthn support here: https://github.com/WordPress/two-factor/pull/427
 
-= Is there a recommended way to use passkeys or hardware security keys with Two-Factor? = 
+= Is there a recommended way to use passkeys or hardware security keys with Two-Factor? =
 
 Yes. For passkeys and hardware security keys, you can install the Two-Factor Provider: WebAuthn plugin: https://wordpress.org/plugins/two-factor-provider-webauthn/
 . It integrates directly with Two-Factor and adds WebAuthn-based authentication as an additional two-factor option for users.
@@ -145,12 +135,54 @@ Yes. For passkeys and hardware security keys, you can install the Two-Factor Pro
 == Screenshots ==
 
 1. Two-factor options under User Profile - Shows the main configuration area where users can enable different authentication methods.
-2. U2F Security Keys section under User Profile - Displays the security key management interface for registering and managing FIDO U2F devices.
-3. Email Code Authentication during WordPress Login - Shows the email verification screen that appears during login.
-4. Authenticator App (TOTP) setup with QR code - Demonstrates the QR code generation and manual key entry for TOTP setup.
-5. Backup codes generation and management - Shows the backup codes interface for generating and managing emergency access codes.
+2. Email Code Authentication during WordPress Login - Shows the email verification screen that appears during login.
+3. Authenticator App (TOTP) setup with QR code - Demonstrates the QR code generation and manual key entry for TOTP setup.
+4. Backup codes generation and management - Shows the backup codes interface for generating and managing emergency access codes.
 
 == Changelog ==
+
+= 0.15.0 - 2026-02-13 =
+
+* **Breaking Changes:** Trigger two-factor flow only when expected by @kasparsd in [#660](https://github.com/WordPress/two-factor/pull/660) and [#793](https://github.com/WordPress/two-factor/pull/793).
+* **New Features:** Include user IP address and contextual warning in two-factor code emails by @todeveni in [#728](https://github.com/WordPress/two-factor/pull/728)
+* **New Features:** Optimize email text for TOTP by @masteradhoc in [#789](https://github.com/WordPress/two-factor/pull/789)
+* **New Features:** Add "Settings" action link to plugin list for quick access to profile by @hardikRathi in [#740](https://github.com/WordPress/two-factor/pull/740)
+* **New Features:** Additional form hooks by @eric-michel in [#742](https://github.com/WordPress/two-factor/pull/742)
+* **New Features:** Full RFC6238 Compatibility by @ericmann in [#656](https://github.com/WordPress/two-factor/pull/656)
+* **New Features:** Consistent user experience for TOTP setup by @kasparsd in [#792](https://github.com/WordPress/two-factor/pull/792)
+* **Documentation:** `@since` docs by @masteradhoc in [#781](https://github.com/WordPress/two-factor/pull/781)
+* **Documentation:** Update user and admin docs, prepare for more screenshots by @jeffpaul in [#701](https://github.com/WordPress/two-factor/pull/701)
+* **Documentation:** Add changelog & credits, update release notes by @jeffpaul in [#696](https://github.com/WordPress/two-factor/pull/696)
+* **Documentation:** Clear readme.txt by @masteradhoc in [#785](https://github.com/WordPress/two-factor/pull/785)
+* **Documentation:** Add date and time information above TOTP setup instructions by @masteradhoc in [#772](https://github.com/WordPress/two-factor/pull/772)
+* **Documentation:** Clarify TOTP setup instructions by @masteradhoc in [#763](https://github.com/WordPress/two-factor/pull/763)
+* **Documentation:** Update RELEASING.md by @jeffpaul in [#787](https://github.com/WordPress/two-factor/pull/787)
+* **Development Updates:** Pause deploys to SVN trunk for merges to `master` by @kasparsd in [#738](https://github.com/WordPress/two-factor/pull/738)
+* **Development Updates:** Fix CI checks for PHP compatability by @kasparsd in [#739](https://github.com/WordPress/two-factor/pull/739)
+* **Development Updates:** Fix Playground refs by @kasparsd in [#744](https://github.com/WordPress/two-factor/pull/744)
+* **Development Updates:** Persist existing translations when introducing new helper text in emails by @kasparsd in [#745](https://github.com/WordPress/two-factor/pull/745)
+* **Development Updates:** Fix `missing_direct_file_access_protection` by @masteradhoc in [#760](https://github.com/WordPress/two-factor/pull/760)
+* **Development Updates:** Fix `mismatched_plugin_name` by @masteradhoc in [#754](https://github.com/WordPress/two-factor/pull/754)
+* **Development Updates:** Introduce Props Bot workflow by @jeffpaul in [#749](https://github.com/WordPress/two-factor/pull/749)
+* **Development Updates:** Plugin Check: Fix Missing $domain parameter by @masteradhoc in [#753](https://github.com/WordPress/two-factor/pull/753)
+* **Development Updates:** Tests: Update to supported WP version 6.8 by @masteradhoc in [#770](https://github.com/WordPress/two-factor/pull/770)
+* **Development Updates:** Fix PHP 8.5 deprecated message by @masteradhoc in [#762](https://github.com/WordPress/two-factor/pull/762)
+* **Development Updates:** Exclude 7.2 and 7.3 checks against trunk by @masteradhoc in [#769](https://github.com/WordPress/two-factor/pull/769)
+* **Development Updates:** Fix Plugin Check errors: `MissingTranslatorsComment` & `MissingSingularPlaceholder` by @masteradhoc in [#758](https://github.com/WordPress/two-factor/pull/758)
+* **Development Updates:** Add PHP 8.5 tests for latest and trunk version of WP by @masteradhoc in [#771](https://github.com/WordPress/two-factor/pull/771)
+* **Development Updates:** Add `phpcs:ignore` for falsepositives by @masteradhoc in [#777](https://github.com/WordPress/two-factor/pull/777)
+* **Development Updates:** Fix(totp): `otpauth` link in QR code URL by @sjinks in [#784](https://github.com/WordPress/two-factor/pull/784)
+* **Development Updates:** Update deploy.yml by @masteradhoc in [#773](https://github.com/WordPress/two-factor/pull/773)
+* **Development Updates:** Update required WordPress Version by @masteradhoc in [#765](https://github.com/WordPress/two-factor/pull/765)
+* **Development Updates:** Fix: ensure execution stops after redirects by @sjinks in [#786](https://github.com/WordPress/two-factor/pull/786)
+* **Development Updates:** Fix `WordPress.Security.EscapeOutput.OutputNotEscaped` errors by @masteradhoc in [#776](https://github.com/WordPress/two-factor/pull/776)
+* **Dependency Updates:** Bump qs and express by @dependabot[bot] in [#746](https://github.com/WordPress/two-factor/pull/746)
+* **Dependency Updates:** Bump lodash from 4.17.21 to 4.17.23 by @dependabot[bot] in [#750](https://github.com/WordPress/two-factor/pull/750)
+* **Dependency Updates:** Bump lodash-es from 4.17.21 to 4.17.23 by @dependabot[bot] in [#748](https://github.com/WordPress/two-factor/pull/748)
+* **Dependency Updates:** Bump phpunit/phpunit from 8.5.44 to 8.5.52 by @dependabot[bot] in [#755](https://github.com/WordPress/two-factor/pull/755)
+* **Dependency Updates:** Bump symfony/process from 5.4.47 to 5.4.51 by @dependabot[bot] in [#756](https://github.com/WordPress/two-factor/pull/756)
+* **Dependency Updates:** Bump qs and body-parser by @dependabot[bot] in [#782](https://github.com/WordPress/two-factor/pull/782)
+* **Dependency Updates:** Bump webpack from 5.101.3 to 5.105.0 by @dependabot[bot] in [#780](https://github.com/WordPress/two-factor/pull/780)
 
 = 0.14.2 - 2025-12-11 =
 
@@ -196,4 +228,5 @@ Bumps WordPress minimum supported version to 6.3 and PHP minimum to 7.2.
 
 = 0.9.0 =
 Users are now asked to re-authenticate with their two-factor before making changes to their two-factor settings. This associates each login session with the two-factor login meta data for improved handling of that session.
+
 
